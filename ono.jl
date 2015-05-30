@@ -8,7 +8,7 @@
 =#
 
 type ChanceConstrainedProblem
-    # Val at each point is true if in bounds else false
+    # Val at each point is false if in bounds else true
     grid::Array
     g_N::Function
     g_k::Function
@@ -16,9 +16,11 @@ type ChanceConstrainedProblem
 end
 
 function ono_dp(prob, N)
-    L(lambda, k, x_k, u_k) = k == 0? prob.g_k(k, x_k, u_k) :
-            0 < k < N? prob.g_k(k, x_k, u_k) + prob.grid[x_k]*lambda :
-                       prob.g_k
+    L(lambda, k, x_k, u_k) =
+        k == 0? prob.g_k(k, x_k, u_k) :
+        0 < k < N? prob.g_k(k, x_k, u_k) + prob.grid[x_k]*lambda :
+                   prob.g_N(k, x_k) + prob.grid[x_k]*lambda
+
 end
 
 # Function containing Ono algorithm
