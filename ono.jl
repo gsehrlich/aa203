@@ -81,9 +81,9 @@ function test_ono_dp(λ, dim)
 
     prob = build_test_prob(dim)
 
-    J = ono_dp(prob, λ, N)
+    J, μ = ono_dp(prob, λ, N)
 
-    return J
+    return J, μ
 end
 
 # Function containing Ono algorithm
