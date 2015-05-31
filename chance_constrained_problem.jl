@@ -48,7 +48,8 @@ function get_probs(prob, x)
     end 
 
     i, j = x
-    return probs_big[1+h-i:h+h-i, 1+w-j:w+w-j]
+    probs = probs_big[1+h-i:h+h-i, 1+w-j:w+w-j] 
+    return probs#/sum(probs)
 end
 
 function build_test_prob(dim)
@@ -56,8 +57,8 @@ function build_test_prob(dim)
     grid_int[1:2,1:2] = 1
     grid = convert(Array{Bool}, grid_int)
 
-    g_N(k, x) = x == [dim,dim]? 0 : 1
-    g_k(k, x, u) = 0.0001 * norm(u)
+    g_N(x) = x == [dim,dim]? 0 : 1
+    g_k(k, x, u) = 0.00001 * norm(u)
     Δ = 0.2
     σ² = 1
     d = 2
