@@ -29,12 +29,13 @@ function ono_dp(prob, λ, N)
     function get_feas_u(x)
         feas_u = Vector{Int64}[]
 
-        for u_x in -prob.d:prob.d
-            for u_y in -prob.d:prob.d
+	square_semidim = int(prob.d)
+        for u_x in -square_semidim:square_semidim
+            for u_y in -square_semidim:square_semidim
                 u = [u_x, u_y]
 
                 if norm(u) <= prob.d && all(x + u .>= [1,1]) && all(x + u .<= [size(prob.grid)...])
-                    push!(feas_u, u)
+		    push!(feas_u, u)
                 end
             end
         end
@@ -55,7 +56,6 @@ function ono_dp(prob, λ, N)
     # will hold our policies
     μ = [ (Vector{Int64} => Vector{Int64})[] for k in 0:N-1 ]
     for k in N-1:-1:0
-        J_this = copy(J)
         for i = 1:h
             for j = 1:w
                 x = [i,j]
@@ -75,11 +75,8 @@ function ono_dp(prob, λ, N)
     return J, μ
 end
 
-
-function test_ono_dp(λ, dim)
-    N = 50
-
-    prob = build_test_prob(dim)
+function test_ono_dp(λ, dim, N=50, α=1e-5)
+    prob = build_test_prob(dim, α)
 
     J, μ = ono_dp(prob, λ, N)
 
