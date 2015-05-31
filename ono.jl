@@ -9,7 +9,6 @@
 
 require("chance_constrained_problem.jl")
 
-# returns ??
 function ono_dp(prob, λ, N)
     function L(k, x, u)
         if u == nothing
@@ -21,7 +20,7 @@ function ono_dp(prob, λ, N)
         elseif 0 < k < N
             prob.g_k(k, x, u) + prob.grid[x[1], x[2]]*λ
         elseif k == N
-            prob.g_N(k, x) + prob.grid[x[1], x[2]]*λ
+            prob.g_N(x) + prob.grid[x[1], x[2]]*λ
         else
             error("k = $(k) but must be in interval [0, N]")
         end
@@ -34,7 +33,7 @@ function ono_dp(prob, λ, N)
             for u_y in -prob.d:prob.d
                 u = [u_x, u_y]
 
-                if norm(u) <= prob.d #& all(u .>= [1,1]) & all(u .<= 
+                if norm(u) <= prob.d && all(x + u .>= [1,1]) && all(x + u .<= [size(prob.grid)...])
                     push!(feas_u, u)
                 end
             end
@@ -45,34 +44,35 @@ function ono_dp(prob, λ, N)
 
     h, w = size(prob.grid)
 
-    J = zeros(size(prob.grid))
+    J = zeros(h, w, N+1)
+
     for i = 1:h
         for j = 1:w
-            J[i,j] = L(N, (i,j), nothing)
+            J[i,j,N+1] = L(N, [i,j], nothing)
         end
     end
 
+    # will hold our policies
+    μ = [ (Vector{Int64} => Vector{Int64})[] for k in 0:N-1 ]
     for k in N-1:-1:0
         J_this = copy(J)
         for i = 1:h
             for j = 1:w
                 x = [i,j]
 
-                probs = get_probs(prob, x)
+                action_tuples = [(L(k, x, u) + sum(get_probs(prob, x+u).*J[:,:,k+2]), tuple(u...)) 
+                    for u in get_feas_u(x)]
 
-                action_tuples = [(L(k, x, u) + sum(probs.*J), tuple(u...)) for u in get_feas_u(x)]
-                best_u_ind = indmax(action_tuples)
+                best_u_ind = indmin(action_tuples)
                 
                 best_J, best_u = action_tuples[best_u_ind]
-                J_this[i,j] = best_J
-                # do something with best_u
+                J[i,j,k+1] = best_J
+                μ[k+1][[i,j]] = [best_u...]
             end
         end
-
-        J = J_this
     end
 
-    return J
+    return J, μ
 end
 
 
