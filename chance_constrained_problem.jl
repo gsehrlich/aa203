@@ -23,6 +23,23 @@ type ChanceConstrainedProblem
     d::Float64 #controller bound
 end
 
+function get_feas_u(prob, x)
+    feas_u = Vector{Int64}[]
+
+    square_semidim = int(prob.d)
+    for u_x in -square_semidim:square_semidim
+        for u_y in -square_semidim:square_semidim
+            u = [u_x, u_y]
+
+            if norm(u) <= prob.d && all(x + u .>= [1,1]) && all(x + u .<= [size(prob.grid)...])
+                push!(feas_u, u)
+            end
+        end
+    end
+
+    return feas_u
+end
+
 function prob_of_this_square(x, center, σ²)
     return mvnun(x - [0.5, 0.5], x + [0.5, 0.5], center, σ²*eye(2))[1]
 end
@@ -53,13 +70,15 @@ function get_probs(prob, x)
 end
 
 # easy_test: Look for obvious mistakes
-grid = [0 0; 0 0]
-g_N(x) = x == [2, 2]? 0 : 1
-g_k(k, x, u) = norm(u)
-Δ = 0.1
-σ² = 1
-d = 1.5 # 1-diagonals ok but not 2 in a row
-easy_test = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
+function easy_test()
+    grid = [0 0; 0 0]
+    g_N(x) = x == [2, 2]? 0 : 1
+    g_k(k, x, u) = norm(u)
+    Δ = 0.1
+    σ² = 1
+    d = 1.5 # 1-diagonals ok but not 2 in a row
+    easy_test = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
+end
 
 function build_test_prob(dim, α = 1e-5)
     grid_int = zeros(dim, dim)

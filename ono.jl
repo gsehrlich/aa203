@@ -8,6 +8,45 @@
 =#
 
 require("chance_constrained_problem.jl")
+require("general_dp.jl")
+
+function risk_to_go(prob, N, μ)
+    h, w = size(prob.grid)
+
+    r = zeros(h, w, N+1)
+    for i = 1:h
+        for j = 1:w
+            r[i, j, N+1] = int(prob.grid[i, j])
+        end
+    end
+
+    for k in N-1:-1:0
+        for i = 1:h
+            for j = 1:w
+                x = [i,j]
+                u = μ[k+1][x]
+
+                r[i, j, k+1] = int(prob.grid[i, j]) + sum(get_probs(prob, x+u).*r[:,:,k+2])
+            end
+        end
+    end
+
+    return r[:,:,1]
+end
+
+function compute_Δ_min(prob, N)
+    function g(k, x, u)
+        if 0 <= k <= N
+            int(prob.grid[x...])
+        else
+            error("k = $(k) but must be in interval [0, N]")
+        end
+    end
+            
+    J, μ = dp(prob, N, g, get_feas_u, get_probs)
+
+    return J[:,:,1]
+end
 
 function ono_dp(prob, λ, N)
     function L(k, x, u)
@@ -16,63 +55,17 @@ function ono_dp(prob, λ, N)
         end
 
         if k == 0
-            prob.g_k(k, x, u) 
+            prob.g_k(k, x, u)
         elseif 0 < k < N
-            prob.g_k(k, x, u) + prob.grid[x[1], x[2]]*λ
+            prob.g_k(k, x, u) + prob.grid[x...]*λ
         elseif k == N
-            prob.g_N(x) + prob.grid[x[1], x[2]]*λ
+            prob.g_N(x) + prob.grid[x...]*λ
         else
             error("k = $(k) but must be in interval [0, N]")
         end
     end
 
-    function get_feas_u(x)
-        feas_u = Vector{Int64}[]
-
-	square_semidim = int(prob.d)
-        for u_x in -square_semidim:square_semidim
-            for u_y in -square_semidim:square_semidim
-                u = [u_x, u_y]
-
-                if norm(u) <= prob.d && all(x + u .>= [1,1]) && all(x + u .<= [size(prob.grid)...])
-		    push!(feas_u, u)
-                end
-            end
-        end
-
-        return feas_u
-    end
-
-    h, w = size(prob.grid)
-
-    J = zeros(h, w, N+1)
-
-    for i = 1:h
-        for j = 1:w
-            J[i,j,N+1] = L(N, [i,j], nothing)
-        end
-    end
-
-    # will hold our policies
-    μ = [ (Vector{Int64} => Vector{Int64})[] for k in 0:N-1 ]
-    for k in N-1:-1:0
-        for i = 1:h
-            for j = 1:w
-                x = [i,j]
-
-                action_tuples = [(L(k, x, u) + sum(get_probs(prob, x+u).*J[:,:,k+2]), tuple(u...)) 
-                    for u in get_feas_u(x)]
-
-                best_u_ind = indmin(action_tuples)
-                
-                best_J, best_u = action_tuples[best_u_ind]
-                J[i,j,k+1] = best_J
-                μ[k+1][[i,j]] = [best_u...]
-            end
-        end
-    end
-
-    return J, μ
+    return dp(prob, N, L, get_feas_u, get_probs)
 end
 
 function test_ono_dp(λ, dim, N=50, α=1e-5)
@@ -85,16 +78,68 @@ end
 
 # Function containing Ono algorithm
 # N is time horizon
-function ono_solve(prob, eps_d=1e-5, N=50)
+function ono_solve(prob, x0, eps_d=1e-5, N=50)
     #=
         Steps 1-4: Check if unconstrained solution meets contraints
     =#
+
+    function r_and_μ(λ)
+        J, μ = ono_dp(prob, λ, N)
+        r = risk_to_go(prob, N, μ)
+
+        return r[x0...], μ
+    end
+
+    r, μ = r_and_μ(0)
+    if r - prob.Δ <= 0
+        return μ
+    end
 
     #=
         Steps 5-8: Check if a feasible solution exists
     =#
 
+    Δ_min = compute_Δ_min(prob, N)
+    if Δ_min[x0...] > prob.Δ
+        return "Infeasible" #throw this error more intelligently
+    end
+
     #=
         Steps 9-20: Main loop of algorithm
     =#
+
+    λ⁺ = 1
+    while r_and_μ(λ⁺)[1] - prob.Δ > 0
+        λ⁺ *= 2
+    end
+
+    λᴸ = 0
+    λᵁ = λ⁺
+
+    rᵁ, μᵁ = r_and_μ(λᵁ)
+
+    while (λᴸ - λᵁ) * (rᵁ - prob.Δ) > eps_d
+        println((λᴸ - λᵁ) * (rᵁ - prob.Δ))
+        λ = (λᴸ + λᵁ) / 2
+
+        r, μ = r_and_μ(λ)
+        if r - prob.Δ == 0
+            return μ
+        elseif r - prob.Δ < 0
+            λᵁ = λ
+            rᵁ = r
+        else
+            λᴸ = λ
+        end
+    end
+
+    return μ
+end
+
+function test_full_ono()
+    prob = build_test_prob(5, 1e-5);
+    x0 = [1,3];
+    μ = ono_solve(prob, x0);
+
+    return μ
 end
