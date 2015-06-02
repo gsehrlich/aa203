@@ -11,13 +11,13 @@ function easy_test(alg, x0=[1, 1], plot=false, N=5,
     d = 1.5 # 1-diagonals ok but not 2 in a row
     easy_test_prob = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
 
-    μ = alg(easy_test_prob, x0, alg_args...; N=N, alg_kwargs...)
+    J, μ = alg(easy_test_prob, x0, alg_args...; N=N, alg_kwargs...)
 
     if plot
         plot_noiseless_path(easy_test_prob, μ, x0, N)
     end
 
-    return μ
+    return J, μ
 end
 
 function interesting_test(alg, alg_args=();
@@ -36,13 +36,13 @@ function interesting_test(alg, alg_args=();
     d = 1
     interesting_test_prob = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
 
-    μ = alg(interesting_test_prob, x0, alg_args...; N=N, alg_kwargs...)
+    J, μ = alg(interesting_test_prob, x0, alg_args...; N=N, alg_kwargs...)
 
     if plot
         plot_noiseless_path(interesting_test_prob, μ, x0, N)
     end
 
-    return μ
+    return J, μ
 end
 
 function plot_noiseless_path(prob, μ, x0, N)
@@ -51,10 +51,10 @@ function plot_noiseless_path(prob, μ, x0, N)
 
     path_arr = hcat(path...)
 
-    jittered_path = path_arr + randn(size(path_arr))/10
+    jittered_path = path_arr + randn(size(path_arr))/20
 
     plot(jittered_path[2,:], dim+1-jittered_path[1,:], "b+")
-    #plot(path_arr[2,:], dim+1-path_arr[1,:], "b-")
+    #plot(jittered_path[2,:], dim+1-jittered_path[1,:], "b")
     xlim([0.5, dim+0.5])
     ylim([0.5, dim+0.5])
 end
