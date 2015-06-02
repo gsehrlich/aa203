@@ -36,6 +36,7 @@ function risk_to_go(prob, N, μ)
 end
 
 function compute_Δ_min(prob, N)
+    # Make sure problem posed is feasible
     function g(k, x, u)
         if 0 <= k <= N
             int(prob.grid[x...])
@@ -79,7 +80,7 @@ end
 
 # Function containing Ono algorithm
 # N is time horizon
-function ono_solve(prob, x0, eps_d=1e-5, N=50)
+function ono_solve(prob, x0; eps_d=1e-5, N=50)
     #=
         Steps 1-4: Check if unconstrained solution meets contraints
     =#
