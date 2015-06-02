@@ -51,9 +51,9 @@ function plot_noiseless_path(prob, μ, x0, N)
 
     path_arr = hcat(path...)
 
-    jittered_path = path_arr + randn(size(path_arr))
+    jittered_path = path_arr + randn(size(path_arr))/10
 
-    plot(path_arr[2,:], dim+1-path_arr[1,:], "b+")
+    plot(jittered_path[2,:], dim+1-jittered_path[1,:], "b+")
     #plot(path_arr[2,:], dim+1-path_arr[1,:], "b-")
     xlim([0.5, dim+0.5])
     ylim([0.5, dim+0.5])
