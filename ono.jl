@@ -6,6 +6,7 @@
 
     Implementation of Ono et. al. CCPD algorithm
 =#
+using PyPlot
 
 require("chance_constrained_problem.jl")
 require("general_dp.jl")
@@ -119,7 +120,6 @@ function ono_solve(prob, x0, eps_d=1e-5, N=50)
     rᵁ, μᵁ = r_and_μ(λᵁ)
 
     while (λᴸ - λᵁ) * (rᵁ - prob.Δ) > eps_d
-        println((λᴸ - λᵁ) * (rᵁ - prob.Δ))
         λ = (λᴸ + λᵁ) / 2
 
         r, μ = r_and_μ(λ)
@@ -136,10 +136,17 @@ function ono_solve(prob, x0, eps_d=1e-5, N=50)
     return μ
 end
 
-function test_full_ono()
-    prob = build_test_prob(5, 1e-5);
+#takes 6.45 seconds with full probability map
+function test_full_ono(dim=5)
+    prob = build_test_prob(dim, 1e-5);
     x0 = [1,3];
     μ = ono_solve(prob, x0);
 
-    return μ
+    path = compute_noiseless_path(prob, μ, x0, 50)
+
+    path_arr = hcat(path...)
+
+    plot(path_arr[2,:], dim+1-path_arr[1,:], "b+")
+    xlim([0.5, dim+0.5])
+    ylim([0.5, dim+0.5])
 end

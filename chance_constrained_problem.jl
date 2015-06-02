@@ -95,3 +95,15 @@ function build_test_prob(dim, α = 1e-5)
 
     return prob
 end
+
+function compute_noiseless_path(prob, μ, x0, N)
+    path = typeof(x0)[]
+    push!(path, x0)
+
+    for k = 1:length(μ)
+        x = path[k]
+        push!(path, x + μ[k][x])
+    end
+        
+    return path
+end
