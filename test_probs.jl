@@ -23,16 +23,16 @@ end
 function interesting_test(alg, alg_args=();
                           N=50, x0=[3, 18], plot=false, alg_kwargs=(Any => Any)[])
     grid = zeros(20, 20)
-    # Obstacle 1: rows 5-15, cols 4-6
-    grid[5:15, 4:6] = 1
-    # Obstacle 2: rows 5-8, cols 10-16; rows 9-15, cols 13-16
-    grid[5:8, 10:16] = 1
-    grid[9:15, 13:16] = 1
+    # Obstacle 1: rows 5-16, cols 6-7
+    grid[5:16, 6:7] = 1
+    # Obstacle 2: rows 5-8, cols 11-16; rows 9-16, cols 13-16
+    grid[5:8, 11:16] = 1
+    grid[9:16, 13:16] = 1
     x_goal = [12, 10]
     g_N(x) = x == x_goal? 0: 1
-    g_k(k, x, u) = norm(u)
-    Δ = 0.1
-    σ² = 1
+    g_k(k, x, u) = 1e-5 * norm(u)
+    Δ = 0.001 #or 0.01
+    σ² = 0.2
     d = 1
     interesting_test_prob = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
 
