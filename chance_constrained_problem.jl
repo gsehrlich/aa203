@@ -69,17 +69,6 @@ function get_probs(prob, x)
     return probs/sum(probs)
 end
 
-# easy_test: Look for obvious mistakes
-function easy_test()
-    grid = [0 0; 0 0]
-    g_N(x) = x == [2, 2]? 0 : 1
-    g_k(k, x, u) = norm(u)
-    Δ = 0.1
-    σ² = 1
-    d = 1.5 # 1-diagonals ok but not 2 in a row
-    easy_test = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
-end
-
 function build_test_prob(dim, α = 1e-5)
     grid_int = zeros(dim, dim)
     grid_int[1:2, 1:2] = 1

@@ -1,19 +1,3 @@
-function L(k, x, u)
-    if u == nothing
-        u = (0, 0)
-    end
-
-    if k == 0
-        prob.g_k(k, x, u)
-    elseif 0 < k < N
-        prob.g_k(k, x, u) + prob.grid[x...]*λ
-    elseif k == N
-        prob.g_N(x) + prob.grid[x...]*λ
-    else
-        error("k = $(k) but must be in interval [0, N]")
-    end
-end
-
 function dp(prob, N, g, get_feas_u, get_probs)
     h, w = size(prob.grid)
 
