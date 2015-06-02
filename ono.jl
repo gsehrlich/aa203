@@ -89,12 +89,12 @@ function ono_solve(prob, x0; eps_d=1e-5, N=50)
         J, μ = ono_dp(prob, λ, N)
         r = risk_to_go(prob, N, μ)
 
-        return r[x0...], μ
+        return r[x0...], μ, J
     end
 
-    r, μ = r_and_μ(0)
+    r, μ, J = r_and_μ(0)
     if r - prob.Δ <= 0
-        return μ
+        return J, μ
     end
 
     #=
@@ -103,7 +103,7 @@ function ono_solve(prob, x0; eps_d=1e-5, N=50)
 
     Δ_min = compute_Δ_min(prob, N)
     if Δ_min[x0...] > prob.Δ
-        return "Infeasible" #throw this error more intelligently
+        error("Infeasible")
     end
 
     #=
@@ -118,14 +118,14 @@ function ono_solve(prob, x0; eps_d=1e-5, N=50)
     λᴸ = 0
     λᵁ = λ⁺
 
-    rᵁ, μᵁ = r_and_μ(λᵁ)
+    rᵁ, μᵁ, J = r_and_μ(λᵁ)
 
     while (λᴸ - λᵁ) * (rᵁ - prob.Δ) > eps_d
         λ = (λᴸ + λᵁ) / 2
 
-        r, μ = r_and_μ(λ)
+        r, μ, J = r_and_μ(λ)
         if r - prob.Δ == 0
-            return μ
+            return J, μ
         elseif r - prob.Δ < 0
             λᵁ = λ
             rᵁ = r
@@ -134,7 +134,7 @@ function ono_solve(prob, x0; eps_d=1e-5, N=50)
         end
     end
 
-    return μ
+    return J, μ
 end
 
 #takes 6.45 seconds with full probability map
