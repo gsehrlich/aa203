@@ -5,7 +5,7 @@ risk_λ = (Any => Any)[]
 
 using HDF5, JLD
 
-data_dir = "../lambda_data/lambda_data"
+data_dir = error("change this to point to your data") #"../lambda_data/lambda_data"
 
 function monte_carlo_all_lambdas()
     for filename in readdir(data_dir)
