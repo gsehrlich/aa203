@@ -7,7 +7,7 @@ using HDF5, JLD
 # λ
 
 λ = float(ARGS[1])
-N = 5
+N = 50
 
 function ono_dp_wrapper(prob, x0, λ; N=N)
     return ono_dp(prob, λ, N)
