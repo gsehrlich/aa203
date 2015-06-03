@@ -13,7 +13,7 @@ function ono_dp_wrapper(prob, x0, λ; N=N)
     return ono_dp(prob, λ, N)
 end
 
-J, μ = interesting_test(ono_dp_wrapper, (λ,), N=N)
+J, μ = interesting_test(ono_dp_wrapper, (λ,), N=N, to_return=(:J, :μ))
 
 #save("lambda_fixed_at_$(λ)", "μ", μ, "J", J)
 failure_rate, failed_paths = monte_carlo_simulate(interesting_test_prob,
