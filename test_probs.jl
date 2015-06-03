@@ -51,7 +51,7 @@ function interesting_test(alg, alg_args=();
 
     return_val_dict[:x0] = x0
 
-    if :J in to_return or :μ in to_return
+    if :J in to_return || :μ in to_return
         return_val_dict[:J], return_val_dict[:μ] =
             alg(interesting_test_prob, x0, alg_args...; N=N, alg_kwargs...)
     end
