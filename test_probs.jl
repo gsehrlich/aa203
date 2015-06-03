@@ -29,6 +29,7 @@ end
 
 # Δ = 0.001 goes around RHS
 # Δ = 0.01 goes around LHS
+interesting_test_x_goal = [12, 10]
 function interesting_test(alg, alg_args=();
                           N=50, x0=[3, 18], plot=false,
                           to_return=(),
@@ -39,8 +40,7 @@ function interesting_test(alg, alg_args=();
     # Obstacle 2: rows 5-8, cols 11-16; rows 9-16, cols 13-16
     grid[5:8, 11:16] = 1
     grid[9:16, 13:16] = 1
-    x_goal = [12, 10]
-    g_N(x) = x == x_goal? 0: 1
+    g_N(x) = x == intereting_test_x_goal? 0: 1
     g_k(k, x, u) = 1e-5 * norm(u)
     Δ = 0.001 #or 0.01
     σ² = 0.2

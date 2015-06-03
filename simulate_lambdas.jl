@@ -22,8 +22,29 @@ function monte_carlo_all_lambdas(num_samples)
     return failure_rate_λ, failed_paths_λ
 end
 
-function noiseless_path_lambdas()
+function noiseless_path_lambdas(prob; start=1, step=1, stop=nothing)
+    # set up figure and grid
+    ax = axes(aspect="equal")
+    h, w = size(prob.grid)
+    xlim(0.5, w + 0.5)
+    ylim(0.5, h + 0.5)
+    ax[:set_xticklabels]([])
+    ax[:set_yticklabels]([])
+    ax[:set_xticks]([0.5:1:w+0.5])
+    ax[:set_yticks]([0.5:1:h+0.5])
+    grid()
+
+    grid_to_imshow = zeros(h + 1, w + 1)
+    grid_to_imshow[end:-1:2, 2:end] = prob.grid
+
+    # plot infeasible region
+    imshow(grid_to_imshow, interpolation="none", cmap=get_cmap("Greys"))
+
     filenames = readdir(data_dir)
+    if stop==nothing
+        stop = length(filenames)
+    end
+    filenames = [filenames[i] for i in start:step:stop]
     λs = [float(filename[17:end]) for filename in filenames]
     pairs = sort([zip(λs, filenames)...])
     n = length(filenames)
@@ -35,7 +56,22 @@ function noiseless_path_lambdas()
         plot_noiseless_path(interesting_test_prob, μ,
                             interesting_test_x0, 10, color=color)
     end
+
+    # plot start state
+    x = interesting_test_x0
+    plot([x[2]], [h + 1 - x[1]], "o", color=(0, 1, 0))
+
+    # plot goal state
+    x = interesting_test_x_goal
+    plot([x[2]], [h + 1 - x[1]], "o", color=(1, 1, 0))
+
+    xlabel("/$x_1/$")
+    ylabel("/$x_2/$")
+    title("Path dependence on λ")
 end
+
+noiseless_path_lambdas() = noiseless_path_lambdas(interesting_test_prob,
+    step=15)
 
 function monte_carlo_lambdas()
     monte_carlo_dir = "monte_carlo_lambda"
