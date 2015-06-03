@@ -15,4 +15,9 @@ end
 
 J, μ = interesting_test(ono_dp_wrapper, (λ,), N=N)
 
-save("lambda_fixed_at_$(λ)", "μ", μ, "J", J)
+#save("lambda_fixed_at_$(λ)", "μ", μ, "J", J)
+failure_rate, failed_paths = monte_carlo_simulate(interesting_test_prob,
+                                                    interesting_test_x0, 
+                                                    μ, 
+                                                    10000)
+save("monte_carlo_lambda_fixed_at_$(λ)", "failure_rate", failure_rate, "failed_paths", failed_paths)
