@@ -1,5 +1,6 @@
 require("ono.jl")
 require("test_probs.jl")
+require("simulate.jl")
 
 using HDF5, JLD
 
