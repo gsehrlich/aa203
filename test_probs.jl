@@ -2,22 +2,29 @@
 require("ono.jl");
 
 function easy_test(alg, x0=[1, 1], plot=false, N=5,
-                   alg_args=(); alg_kwargs=(Any => Any)[])
+                   alg_args=(); to_return=(), alg_kwargs=(Any => Any)[])
     grid = [0 0; 0 0]
     g_N(x) = x == [2, 2]? 0 : 1
     g_k(k, x, u) = norm(u)
     Δ = 0.1
     σ² = 1
     d = 1.5 # 1-diagonals ok but not 2 in a row
-    easy_test_prob = ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
 
-    J, μ = alg(easy_test_prob, x0, alg_args...; N=N, alg_kwargs...)
+    return_val_dict = (Symbol => Any)[]
+    return_val_dict[:easy_test_prob] = 
+                        ChanceConstrainedProblem(grid, g_N, g_k, Δ, σ², d)
+    return_val_dict[:x0] = x0
+
+    if :J in to_return or :μ in to_return
+        return_val_dict[:J], return_val_dict[:μ] =
+            alg(easy_test_prob, x0, alg_args...; N=N, alg_kwargs...)
+    end
 
     if plot
         plot_noiseless_path(easy_test_prob, μ, x0, N)
     end
 
-    return J, μ
+    return tuple([return_val_dict[key] for key in to_return]...)
 end
 
 # Δ = 0.001 goes around RHS

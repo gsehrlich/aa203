@@ -1,23 +1,25 @@
 require("simulate.jl")
 require("test_probs.jl")
 
-risk_λ = (Any => Any)[]
-
 using HDF5, JLD
 
-data_dir = error("change this to point to your data") #"../lambda_data/lambda_data"
+#data_dir = error("change this to point to your data")
+data_dir = "../lambda_data/lambda_data"
 
-function monte_carlo_all_lambdas()
+function monte_carlo_all_lambdas(num_samples)
+    failure_rate_λ = (Any => Any)[]
+    failed_paths_λ = (Any => Any)[]
     for filename in readdir(data_dir)
         λ = float(filename[17:end])
         println("λ = $(λ)")
         μ = load("$(data_dir)/$(filename)")["μ"]
 
-        risk_λ[λ] = monte_carlo_simulate(interesting_test_prob,
-                                         interesting_test_x0, μ, 10)
+        failure_rate_λ[λ], failed_paths_λ[λ] =
+                    monte_carlo_simulate(interesting_test_prob,
+                                         interesting_test_x0, μ, num_samples)
     end
 
-    return risk_λ
+    return failure_rate_λ, failed_paths_λ
 end
 
 function noiseless_path_lambdas()
