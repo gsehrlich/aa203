@@ -30,16 +30,19 @@ function simulate(prob, x0, μ)
 end
 
 function monte_carlo_simulate(prob, x0, μ, num_trials)
-    simulations = [simulate(prob, x0, μ) for k in 1:num_trials]
-    failures = sum([zip(simulations...)...][1])
-    failure_rate = failures/num_trials
-
+    num_failures = 0
     failed_paths = Array{Array{Int32, 1}, 1}[]
-    for (failed, path) in simulations
+
+    for k = 1:num_trials
+        failed, path = simulate(prob, x0, μ)
+
+        num_failures += failed
         if failed
             push!(failed_paths, path)
         end
     end
+
+    failure_rate = num_failures/num_trials
     
     return failure_rate, failed_paths
 end
