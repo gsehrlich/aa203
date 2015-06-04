@@ -1,0 +1,68 @@
+\section{Introduction}
+Surveys are employed to infer information about an entire population.
+Data is collected over a sample of this population and then aggregated to produce meaningful, understandable results.
+For example, polling data is used to discuss how different segments of the population respond to some binary question, such as ``do you use Facebook?'' or ``do you think abortion should be legal'' \cite{pew2013facebook, pew2013abortion}.
+Individuals respond ``yes'' or ``no'' and then these responses are averaged for each segment so that we can answer questions like ``what percentage of people under 30 use Facebook?''
+While informative, surveys are difficult and expensive endeavors.
+A typical 15 minute phone survey with 500 respondents may cost \$16,000 \cite{wallacecost}.
+There is a lot of room to more efficiently use collected data. %, a problem which we address.
+
+Here we focus specifically on this averaging problem: we have a variable, the average of which we want to calculate for each of several population segments. 
+In order to estimate each population mean, we have samples or observations for each population segment, which may be either continuous or binary (ones and zeros) depending on the exact problem. 
+Traditionally, we would simply calculate the so-called ``sample mean'' for each segment, and report this as well as some associated confidence intervals which we determine by the number of samples we have for each segment.
+
+While most practitioners would agree that large sample sizes are essential both for improving estimates and shrinking error bars, there is always incentive to do more with fewer data samples.
+Collecting survey data from phone calls and live interviews is tedious and expensive.
+%It may be hard in practice to incentivize many smartphone users to upload their crowdsensed data due to individual costs like limited battery life and capped data plans.
+This can be frustrating, because there is often so much structure in this data that each extra sample or piece of data does not heavily influence the final aggregated value.
+
+In similar problems, a recent tool called compressed sensing (CS) is often used to exploit the structure in data and do more with fewer samples.
+In the particular setting of reconstructing a vector signal from linear measurements when the signal is known to be ``sparse'' (representable by only a small number of vectors in some basis), CS is guaranteed to exactly recover a signal of length $n$ with a number of measurements or samples only logarithmic in $n$.
+Similarly impressive guarantees exist even when these samples are noisy.
+
+There is certainly enough structure in segmented survey data that applying CS should be fruitful.
+% for example...
+To illustrate this, consider four hypothetical geographic regions $A, B, C$ and $D$.
+Suppose that in each region 20\%, 20\%, 80\%, and 40\% of people in that region own an umbrella, respectively.
+Insert these values into a column vector, i.e. $g = \begin{bmatrix} 0.2 & 0.2 & 0.8 & 0.4 \end{bmatrix}^T$.
+The vector $g$ happens to be 2-sparse in any ``dictionary'' of vectors which contains the two vectors $v_1 = \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix}^T$ and $v_2 = \begin{bmatrix} 0 & 0 & 1 & 0.5\end{bmatrix}^T$, i.e. it can be represented as the linear combination of at most two vectors in that dictionary.
+In this case, $g$ is simply $0.2v_1 + 0.8v_2$.
+
+What might this mean in real terms?
+Perhaps regions $A$ and $B$ are right next to each other, so that they have identical weather: the two 1s in $v_1$ represent a strong correlation between the fraction of umbrella owners in each region.
+In this case, $A$ and $B$ might be in a desert, so very few people bother to purchase umbrellas.
+Meanwhile, maybe region $D$ is also very dry, but has many immigrants from region $C$, a rainy region.
+Few people native to region $D$ own umbrellas, but many people who formerly lived in region $C$ still own them.
+This manifests in the 1 and 0.5 in the third and fourth terms of vector $v_2$, i.e. umbrella ownership per capita is twice as high in $C$ as in $D$.
+
+While there are four regions and four numbers, there might be so much underlying dependence between them that we need only two vectors to represent any given vector of statistics $g$.
+Suppose we generate a huge dictionary of vectors randomly.
+Odds are still high that two of them will (at least approximately) capture some sort of structure inherent to these regions, so that in this dictionary $g$ will still be 2-sparse.
+
+Standard methodology misses out on this structure.
+Respondents are split into groups and weighted based on demographic information, but each segment is treated completely independently.
+If the values for regions $A$ and $B$ are highly related, but we have very little data for region $B$, intuitively we should know more about $B$ if we happen to have lots of data for $A$.
+But separately considering the data for these regions misses out on this opportunity.
+Hence it is natural to turn to CS to make use of this hidden structure.
+
+Though such structure means there is great potential for applying CS in this setting, we must first address two problems:
+\subsubsection{Varying Uncertainty}
+Classic CS is most naturally applied in a situation analogous to knowing the precise means for a few population segments but knowing nothing about the others. With random sampling, instead we are varyingly confident about each mean, depending on the number of observations: we may have 2 observations for one segment and 2000 for another, e.g. if the first segment corresponds to a small minority.
+
+\subsubsection{Confidence Estimates}
+Especially for survey data, it is important to be able to discuss how confident we are in each estimate. One almost never sees a statement such as ``62\% of young people support the president'' without a statement like ``$\pm 3\%$ according to a 95\% confidence interval.'' Classic CS provides only a point estimate; here, we need a \emph{distribution} on the reconstructed or denoised vector in order to have any such sense of confidence.
+
+In this work, we address both of these issues as they pertain to survey data where we want data for each of several population segments.
+In fact, we work around the first issue and at least partially solve the second. 
+To do this, we extend the well-known Bayesian CS framework \cite{ji2008bcs} to create two graphical models, one each for continuous Gaussian random variables and Bernoulli random variables.
+
+Using variational methods, we derive and present iterative algorithms to approximately solve for the underlying means in each case.
+In the process, we compute not only a point estimate of these true means, but also the distributions on them.
+For the case of binary random variables, we are further able to incorporate different weighting for different strata as is common practice in standard survey data analysis.
+
+We evaluate our methods on real life survey data of both classes.
+In these experiments, our methods can match the estimation performance of simple weighted averaging with only a fourth as much data.
+We believe there is great opportunity for these methods to drastically reduce survey cost in these applications, and even enable many new small-scale survey tasks which previously would have been infeasible or too expensive.
+
+%Regardless of whether our data is temperature readings from a network of mobile phones or binary responses from individual survey respondents, our methods provide better estimates of each segment's underlying mean with fewer data points.
+

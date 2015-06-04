@@ -1,0 +1,50 @@
+\documentclass[11pt]{article}
+
+\newcommand{\E}{\mathrm{E}}
+
+\usepackage{natbib}
+\usepackage{amsmath}
+
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Rmaxsub}[1]{R_{\mathrm{max}, i}}
+
+\title{Comparison of Optimal Control Methods for Path Planning}
+\author{Matt Staib and Gabriel Ehrlich}
+\date{\today}
+
+\setcitestyle{numbers}
+
+\begin{document}
+\maketitle
+
+\section{Dunno}
+
+\subsection{MPC}
+
+\subsubsection{a probability question, possibly philosophical}
+
+Let's say a robot is following an MPC policy. It follows the policy, applies the control, measures the new state---and realizes it is still within the feasible region. {\bf Do we reset the risk to 0, or do we assert that it has accrued finite risk so far?}
+
+\begin{description}
+\item[Reset the risk to 0:] The MPC policy was stochastic, but now that its outcome has been measured, there's no stochasticity in what has already collapsed. It's as if the problem starts over from its current location, so the risk should be zero. Choosing the other policy may cause a perfectly functional to robot to freeze in place just before reaching a target state because it has accrued some intangible ``risk'' and cannot proceed without sending that risk beyond the threshold.
+\item[Assert that it has still accrued finite risk:] If we have many robots following the reset-to-zero-risk policy, wouldn't we expect more than \(\Delta\) proportion of the robots to fail? Maybe not though. It seems like the previous policy would imply that any \emph{single step} can accrue risk as large as \(\Delta\), because as long as it succeeds, its risk resets to zero.
+\end{description}
+
+Our formulation will likely involve picking a risk-resetting schema that still keeps the expected proportion of robot failures in a population to \(\Delta\) somehow (provably).
+
+\subsubsection{choosing a final state}
+
+As we proved in class, we can guarantee persistent feasibility by choosing \(\X_f\) to be control invariant. For this problem, this means that at location \(x_i\) having accrued risk \(R_i\), it is possible to apply a control \(u_i\) such that is possible to traverse from \(x_{i + 1} = x_i + u_i\) to a target location along a path that accrues risk less than \(\Delta - R_i\). This is a dynamic programming problem, where the state is \((x_i, \Rmaxsub{i})\) and the incremental cost of applying a control \(u_i\) is \(R_{i + 1}\).
+
+If we keep an infinite time horizon, this DP problem becomes intractable because of the problem's stochasticity. As we take the first recursive step away from the target state \(x_f\), any control has some likelihood of diverging from the intended state, described by noise \(w\). If \(w\) is e.g. Gaussian, then the applied control has a small probability of landing \emph{anywhere} in the feasible region---for most of which we have not yet calculated the solution to the tail problem. The recursion is undermined because the solutions to earlier states must already be known.
+
+One solution is to reformulate the DP as a set of coupled minimizations, but that sounds hard.
+
+Another solution is to set a finite time horizon. In other words, during the first step of the recursion, we consider feasible only those states with paths that reach a target state within one step. The faraway states that the Gaussian assigns a finite probability simply become infeasible for that time step (i.e. \(\Rmaxsub{i} = 0\)). Then the recursion goes back to the previous time step, where now 1- and 2-step paths are allowed, and fewer states are now infeasible. This process can be repeated until a few feasible paths exist from the initial location to a target state. Then we use as \(\X_f\) the set of feasible \((x_i, R_{i, \mathrm{max}})\) points from the longest-allowed-time iteration.
+
+Intuitively, this \(\X_f\) should be more conservative than the maximal \(\X_f\): since the risk never decreases with additional time steps, if the target state can be reached within this constraint in finite time, it can be reached in infinite time. From another perspective, this \(\X_f\) is always overestimating the risk, since legislating \(\Rmaxsub{i} = 0\) after a certain time increases the risk that a control will stochastically send the path into a forbidden region.
+
+\bibliographystyle{plainnat}
+\bibliography{finalproj}
+
+\end{document}
